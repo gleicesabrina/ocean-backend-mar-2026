@@ -21,7 +21,7 @@ const validarPersonagem = (req, res) => {
 }
 
 const obterId = (req, res) => {
-  const id = Number(req.params.id)
+  const id = req.params.id
 
   if (!isValidId(id)) {
     res.status(404).send('Personagem nao encontrado.')
@@ -31,60 +31,63 @@ const obterId = (req, res) => {
   return id
 }
 
-const listar = (req, res) => {
-  res.send(getAll())
+const listar = async (req, res) => {
+  const personagens = await getAll()
+  res.send(personagens)
 }
 
-const buscarPorId = (req, res) => {
+const buscarPorId = async (req, res) => {
   const id = obterId(req, res)
 
-  if (!id) {
+  if (!id) return
+
+  const personagem = await getById(id)
+  if (!personagem) {
+    res.status(404).send('Personagem nao encontrado.')
     return
   }
-
-  res.send(getById(id))
+  res.send(personagem)
 }
 
-const criar = (req, res) => {
-  if (!validarPersonagem(req, res)) {
-    return
-  }
+const criar = async (req, res) => {
+  if (!validarPersonagem(req, res)) return
 
-  create({
+  const novoId = await create({
     nome: req.body.nome,
     imagem: req.body.imagem
   })
 
-  res.send('Novo personagem adicionado com sucesso!')
+  res.status(201).send({ message: 'Novo personagem adicionado com sucesso!', id: novoId })
 }
 
-const atualizar = (req, res) => {
+const atualizar = async (req, res) => {
   const id = obterId(req, res)
+  if (!id) return
 
-  if (!id) {
-    return
-  }
+  if (!validarPersonagem(req, res)) return
 
-  if (!validarPersonagem(req, res)) {
-    return
-  }
-
-  update(id, {
+  const atualizado = await update(id, {
     nome: req.body.nome,
     imagem: req.body.imagem
   })
+
+  if (!atualizado) {
+    res.status(404).send('Personagem nao encontrado para atualizar.')
+    return
+  }
 
   res.send('Personagem atualizado com sucesso!')
 }
 
-const remover = (req, res) => {
+const remover = async (req, res) => {
   const id = obterId(req, res)
+  if (!id) return
 
-  if (!id) {
+  const ok = await remove(id)
+  if (!ok) {
+    res.status(404).send('Personagem nao encontrado para remover.')
     return
   }
-
-  remove(id)
 
   res.send('Personagem removido com sucesso!')
 }

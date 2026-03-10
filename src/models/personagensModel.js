@@ -1,37 +1,38 @@
-const lista = [
-  {
-    nome: 'Rick Sanchez',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/1.jpeg'
-  },
-  {
-    nome: 'Morty Smith',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/2.jpeg'
-  },
-  {
-    nome: 'Summer Smith',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/3.jpeg'
-  }
-]
+import { connect, ObjectId } from '../db.js'
 
-const getAll = () => lista
+const COLLECTION = 'personagens'
 
-const getById = (id) => lista[id - 1]
-
-const create = (personagem) => {
-  lista.push(personagem)
-  return personagem
+async function getAll () {
+  const db = await connect()
+  return db.collection(COLLECTION).find().toArray()
 }
 
-const update = (id, personagem) => {
-  lista[id - 1] = personagem
-  return personagem
+async function getById (id) {
+  const db = await connect()
+  return db.collection(COLLECTION).findOne({ _id: new ObjectId(id) })
 }
 
-const remove = (id) => {
-  const removidos = lista.splice(id - 1, 1)
-  return removidos[0]
+async function create (personagem) {
+  const db = await connect()
+  const result = await db.collection(COLLECTION).insertOne(personagem)
+  return result.insertedId
 }
 
-const isValidId = (id) => Number.isInteger(id) && id >= 1 && id <= lista.length
+async function update (id, personagem) {
+  const db = await connect()
+  await db.collection(COLLECTION).updateOne(
+    { _id: new ObjectId(id) },
+    { $set: personagem }
+  )
+  return getById(id)
+}
+
+async function remove (id) {
+  const db = await connect()
+  const result = await db.collection(COLLECTION).deleteOne({ _id: new ObjectId(id) })
+  return result.deletedCount > 0
+}
+
+const isValidId = (id) => ObjectId.isValid(id)
 
 export { getAll, getById, create, update, remove, isValidId }
