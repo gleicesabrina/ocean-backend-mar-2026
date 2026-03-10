@@ -20,10 +20,17 @@ const validarPersonagem = (req, res) => {
   return true
 }
 
-const obterId = (req, res) => {
-  const id = Number(req.params.id)
+const obterId = async (req, res) => {
+  const id = req.params.id
 
   if (!isValidId(id)) {
+    res.status(404).send('Personagem nao encontrado.')
+    return null
+  }
+
+  const personagem = await getById(id)
+
+  if (!personagem) {
     res.status(404).send('Personagem nao encontrado.')
     return null
   }
@@ -31,26 +38,26 @@ const obterId = (req, res) => {
   return id
 }
 
-const listar = (req, res) => {
-  res.send(getAll())
+const listar = async (req, res) => {
+  res.send(await getAll())
 }
 
-const buscarPorId = (req, res) => {
-  const id = obterId(req, res)
+const buscarPorId = async (req, res) => {
+  const id = await obterId(req, res)
 
   if (!id) {
     return
   }
 
-  res.send(getById(id))
+  res.send(await getById(id))
 }
 
-const criar = (req, res) => {
+const criar = async (req, res) => {
   if (!validarPersonagem(req, res)) {
     return
   }
 
-  create({
+  await create({
     nome: req.body.nome,
     imagem: req.body.imagem
   })
@@ -58,8 +65,8 @@ const criar = (req, res) => {
   res.send('Novo personagem adicionado com sucesso!')
 }
 
-const atualizar = (req, res) => {
-  const id = obterId(req, res)
+const atualizar = async (req, res) => {
+  const id = await obterId(req, res)
 
   if (!id) {
     return
@@ -69,7 +76,7 @@ const atualizar = (req, res) => {
     return
   }
 
-  update(id, {
+  await update(id, {
     nome: req.body.nome,
     imagem: req.body.imagem
   })
@@ -77,14 +84,14 @@ const atualizar = (req, res) => {
   res.send('Personagem atualizado com sucesso!')
 }
 
-const remover = (req, res) => {
-  const id = obterId(req, res)
+const remover = async (req, res) => {
+  const id = await obterId(req, res)
 
   if (!id) {
     return
   }
 
-  remove(id)
+  await remove(id)
 
   res.send('Personagem removido com sucesso!')
 }

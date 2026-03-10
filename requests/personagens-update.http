@@ -1,4 +1,6 @@
-PUT http://localhost:3000/personagens/4
+@personagemId = 000000000000000000000000
+
+PUT http://localhost:3000/personagens/{{personagemId}}
 Content-Type: application/json
 
 {

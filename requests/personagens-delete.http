@@ -1,1 +1,3 @@
-DELETE http://localhost:3000/personagens/1
+@personagemId = 000000000000000000000000
+
+DELETE http://localhost:3000/personagens/{{personagemId}}

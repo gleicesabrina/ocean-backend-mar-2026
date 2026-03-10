@@ -1,37 +1,58 @@
-const lista = [
-  {
-    nome: 'Rick Sanchez',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/1.jpeg'
-  },
-  {
-    nome: 'Morty Smith',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/2.jpeg'
-  },
-  {
-    nome: 'Summer Smith',
-    imagem: 'https://rickandmortyapi.com/api/character/avatar/3.jpeg'
-  }
-]
+import { MongoClient, ObjectId } from 'mongodb'
 
-const getAll = () => lista
+const MONGODB_URI = process.env.MONGODB_URI
+const DATABASE_NAME = 'ocean-backend-mar-2026'
+const COLLECTION_NAME = 'personagens'
 
-const getById = (id) => lista[id - 1]
-
-const create = (personagem) => {
-  lista.push(personagem)
-  return personagem
+if (!MONGODB_URI) {
+  throw new Error('Defina a variavel de ambiente MONGODB_URI com a string de conexao do MongoDB Atlas.')
 }
 
-const update = (id, personagem) => {
-  lista[id - 1] = personagem
-  return personagem
+const client = new MongoClient(MONGODB_URI)
+
+const getCollection = async () => {
+  await client.connect()
+  return client.db(DATABASE_NAME).collection(COLLECTION_NAME)
 }
 
-const remove = (id) => {
-  const removidos = lista.splice(id - 1, 1)
-  return removidos[0]
+const getAll = async () => {
+  const collection = await getCollection()
+  return collection.find().toArray()
 }
 
-const isValidId = (id) => Number.isInteger(id) && id >= 1 && id <= lista.length
+const getById = async (id) => {
+  const collection = await getCollection()
+  return collection.findOne({ _id: new ObjectId(id) })
+}
+
+const create = async (personagem) => {
+  const collection = await getCollection()
+  const resultado = await collection.insertOne(personagem)
+  return collection.findOne({ _id: resultado.insertedId })
+}
+
+const update = async (id, personagem) => {
+  const collection = await getCollection()
+
+  const resultado = await collection.findOneAndUpdate(
+    { _id: new ObjectId(id) },
+    { $set: personagem },
+    { returnDocument: 'after' }
+  )
+
+  return resultado
+}
+
+const remove = async (id) => {
+  const collection = await getCollection()
+
+  const resultado = await collection.findOneAndDelete({
+    _id: new ObjectId(id)
+  })
+
+  return resultado
+}
+
+const isValidId = (id) => ObjectId.isValid(id)
 
 export { getAll, getById, create, update, remove, isValidId }

@@ -7,7 +7,7 @@ const app = express()
 app.use(express.json())
 
 app.get('/', (req, res) => {
-  res.send('Hello World')
+  res.send('Hello World!')
 })
 
 app.get('/oi', (req, res) => {
@@ -15,5 +15,13 @@ app.get('/oi', (req, res) => {
 })
 
 app.use('/personagens', personagensRoutes)
+
+app.use((err, req, res, next) => {
+  console.error(err)
+
+  res.status(500).json({
+    erro: 'Falha ao acessar o MongoDB Atlas. Verifique MONGODB_URI e IP Access List no Atlas.'
+  })
+})
 
 export default app
